@@ -23,4 +23,3 @@
 		<UserAxis Name="Tz" values="  0.00214  -0.12046   0.00062  -0.11565   0.00176  -0.11712 " max="2.5"/>
 	</Calibration>
 </FTSensor>
-

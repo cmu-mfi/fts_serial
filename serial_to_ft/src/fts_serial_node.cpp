@@ -136,9 +136,11 @@ int main(int argc, char *argv[])
     ros::param::param<int>("~baudrate", baud_arg, 115200);
 
     ros::Publisher pub = nh.advertise<geometry_msgs::WrenchStamped>("fts", 1000);
+    ros::Publisher pub_raw = nh.advertise<geometry_msgs::WrenchStamped>("fts_raw", 1000);
     ros::Rate loop_rate(1000);
 
     geometry_msgs::WrenchStamped msg;
+    geometry_msgs::WrenchStamped msg_raw;
 
     SerialPortReader reader("/dev/ttyUSB0", baud_arg);
 
@@ -166,7 +168,7 @@ int main(int argc, char *argv[])
             while (temp != "Voltages:" && !ss.eof())
             {
                 ss >> temp;
-                ROS_INFO_STREAM("Still in here");
+                //ROS_INFO_STREAM("Still in here");
             }
 
             if (temp == "Voltages:")
@@ -183,7 +185,16 @@ int main(int argc, char *argv[])
         msg.wrench.torque.y = FT[4];
         msg.wrench.torque.z = FT[5];
 
+        msg_raw.header.stamp = ros::Time::now();
+        msg_raw.wrench.force.x = voltages[0];
+        msg_raw.wrench.force.y = voltages[1];
+        msg_raw.wrench.force.z = voltages[2];
+        msg_raw.wrench.torque.x = voltages[3];
+        msg_raw.wrench.torque.y = voltages[4];
+        msg_raw.wrench.torque.z = voltages[5];
+
         pub.publish(msg);
+        pub_raw.publish(msg_raw);
 
         ros::spinOnce();
         loop_rate.sleep();

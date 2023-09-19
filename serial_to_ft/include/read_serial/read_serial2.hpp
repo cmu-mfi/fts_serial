@@ -42,14 +42,14 @@ public:
         if (ser.available())
         {
             std::string data;
-            data = ser.read(ser.available());
+            data = ser.readline(65536, "!");
             ROS_INFO_STREAM("Read: " << data);
 
             return data;
         }
         else
         {
-            ROS_ERROR_STREAM("No serial data available");
+            //ROS_ERROR_STREAM("No serial data available");
             return "";
         }
     }
