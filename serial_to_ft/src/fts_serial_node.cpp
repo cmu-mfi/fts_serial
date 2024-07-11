@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstring>
 #include <sstream>
+#include <fstream>
 #include <vector>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,7 +18,7 @@ public:
     Calibration *cal;     // struct containing calibration information
     unsigned short i;     // loop variable used to print results
     short sts;            // return value from functions
-    std::vector<float> TT;
+    float *TT;
 
     FTInterface(char *calfilepath, unsigned short index = 1)
     {
@@ -71,9 +72,11 @@ public:
         // This line is only required if you want to move or rotate the sensor's coordinate system.
         // This example tool transform translates the coordinate system 20 mm along the Z-axis
         // and rotates it 45 degrees about the X-axis.
-        /*
-        TT = {0, 0, 20, 45, 0, 0};
-        sts = SetToolTransform(cal, SampleTT, "mm", "degrees");
+        
+        /* 
+	float temp_TT[] = {0,0,20,45,0,0};
+	TT = temp_TT;
+        sts = SetToolTransform(cal, TT, "mm", "degrees");
         switch (sts)
         {
         case 0:
@@ -91,8 +94,7 @@ public:
             std::cerr<<"Unknown error";
             exit(1);
         }
-        */
-
+        */ 
         // Temperature compensation is on by default if it is available.
         // To explicitly disable temperature compensation, uncomment the following code
         /*SetTempComp(cal,FALSE);                   // disable temperature compensation
@@ -109,6 +111,28 @@ public:
         // store an unloaded measurement; this removes the effect of tooling weight
         Bias(cal, SampleBias);
         */
+    }
+
+    void setToolTransform(float TT[])
+    {
+        sts = SetToolTransform(cal, TT, "mm", "degrees");
+        switch (sts)
+        {
+        case 0:
+            break; // successful completion
+        case 1:
+            std::cerr<<"Invalid Calibration struct";
+            exit(1);
+        case 2:
+            std::cerr<<"Invalid distance units";
+            exit(1);
+        case 3:
+            std::cerr<<"Invalid angle units";
+            exit(1);
+        default:
+            std::cerr<<"Unknown error";
+            exit(1);
+        }
     }
 
     void getFTvalues(float *FT, float *readings)
@@ -131,9 +155,12 @@ int main(int argc, char *argv[])
     std::string calfilepath_arg;
     std::string serial_arg;
     int baud_arg;
+    std::string ns = ros::this_node::getNamespace();
     // ros::param::get("~calfilepath", calfilepath_arg);
     // ros::param::get("~serialport", serial_arg);
     ros::param::param<int>("~baudrate", baud_arg, 115200);
+
+    std::cout<<"namespace:"<<ns;
 
     ros::Publisher pub = nh.advertise<geometry_msgs::WrenchStamped>("fts", 1000);
     ros::Publisher pub_raw = nh.advertise<geometry_msgs::WrenchStamped>("fts_raw", 1000);
@@ -147,10 +174,35 @@ int main(int argc, char *argv[])
     std::string data;
     float voltages[6];
     float FT[6];
+    std::string calfile;
 
-    char *calfilepath = "/home/mfi/repos/ros1_ws/src/fts_serial/serial_to_ft/config/FT45383.cal";
+    if(ns.compare("/yk_builder")==0)
+	calfile = "FT45383_r1.cal";
+    else if(ns.compare("/yk_creator")==0)
+	calfile = "FT45386.cal";
+    else if(ns.compare("/yk_destroyer")==0)
+	calfile = "FT45385.cal";
+ 
+    std::string calfilepath = "/home/mfi/repo/ros1_ws/src/fts_serial/serial_to_ft/config/" + calfile;
+	    
+    //char *calfilepath = "/home/mfi/repo/ros1_ws/src/fts_serial/serial_to_ft/config/FT45386.cal";
     // strcpy(calfilepath, calfilepath_arg.c_str());
-    FTInterface ft(calfilepath);
+    //FTInterface ft(calfilepath);
+    char* file = const_cast<char *>(calfilepath.data());
+    FTInterface ft(file);
+    
+    //Set Tool Transform
+    std::string ttFilePath = "/home/mfi/repo/ros1_ws/fts_serial/serial_to_ft/config/TT.txt";
+    std::ifstream ttFile(ttFilePath);
+    float TT[6];
+    for (int i=0; i<6; i++){
+	    ttFile >> TT[i];
+        TT[i] = 0.0;
+    }
+    ttFile.close();
+    std::cout<<"Tool transform: "<<TT[0]<<" "<<TT[1]<<" "<<TT[2]<<" "<<TT[3]<<" "<<TT[4]<<" "<<TT[5]<<std::endl;
+    std::cout << calfilepath << std::endl;
+    ft.setToolTransform(TT);
 
     while (ros::ok())
     {
@@ -163,15 +215,15 @@ int main(int argc, char *argv[])
             std::stringstream ss(data);
             std::string temp;
 
-            // Expecting data in the form of "Voltages: 0.00V, 0.00V, 0.00V, 0.00V, 0.00V, 0.00V"
+            // Expecting data in the form of "V: 0.00V, 0.00V, 0.00V, 0.00V, 0.00V, 0.00V"
             ss >> temp;
-            while (temp != "Voltages:" && !ss.eof())
+            while (temp != "V:" && !ss.eof())
             {
                 ss >> temp;
                 //ROS_INFO_STREAM("Still in here");
             }
 
-            if (temp == "Voltages:")
+            if (temp == "V:")
                 ss >> voltages[0] >> temp >> voltages[1] >> temp >> voltages[2] >> temp >> voltages[3] >> temp >> voltages[4] >> temp >> voltages[5];
         }
 
