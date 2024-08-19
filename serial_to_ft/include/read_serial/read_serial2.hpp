@@ -43,7 +43,7 @@ public:
         {
             std::string data;
             data = ser.readline(65536, "!");
-            ROS_INFO_STREAM("Read: " << data);
+            // ROS_INFO_STREAM("Read: " << data);
 
             return data;
         }

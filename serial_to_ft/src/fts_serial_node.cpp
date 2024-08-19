@@ -182,6 +182,8 @@ int main(int argc, char *argv[])
 	calfile = "FT45386.cal";
     else if(ns.compare("/yk_destroyer")==0)
 	calfile = "FT45385.cal";
+    else if(ns.compare("/yk_architect")==0)
+	calfile = "FT45384_r1.cal";
  
     std::string calfilepath = "/home/mfi/repo/ros1_ws/src/fts_serial/serial_to_ft/config/" + calfile;
 	    
@@ -245,7 +247,13 @@ int main(int argc, char *argv[])
         msg_raw.wrench.torque.y = voltages[4];
         msg_raw.wrench.torque.z = voltages[5];
 
-        pub.publish(msg);
+
+    	if(ns.compare("/yk_architect")==0){
+	    msg.wrench.force.x += 1.5;
+	    msg.wrench.force.y -= 6.5;	
+	}
+
+	pub.publish(msg);
         pub_raw.publish(msg_raw);
 
         ros::spinOnce();
