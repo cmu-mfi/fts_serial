@@ -157,6 +157,18 @@ add_executable(${PROJECT_NAME}_node src/fts_serial_node.cpp
   include/ATIDAQ/xmltok.c
 )
 
+add_executable(multi_fts_serial_node src/multi_fts_serial_node.cpp
+  include/ATIDAQ/ftconfig.c
+  include/ATIDAQ/ftrt.c
+  include/ATIDAQ/dom.c
+  include/ATIDAQ/expatls.c
+  include/ATIDAQ/node.c
+  include/ATIDAQ/stack.c
+  include/ATIDAQ/xmlparse.c
+  include/ATIDAQ/xmlrole.c
+  include/ATIDAQ/xmltok.c
+)
+
 # # Rename C++ executable without prefix
 # # The above recommended prefix causes long target names, the following renames the
 # # target back to the shorter version for ease of user use
@@ -169,6 +181,10 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 
 # # Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
+  ${catkin_LIBRARIES}
+  ${LIBSERIALPORT_LIBRARIES}
+)
+target_link_libraries(multi_fts_serial_node
   ${catkin_LIBRARIES}
   ${LIBSERIALPORT_LIBRARIES}
 )
