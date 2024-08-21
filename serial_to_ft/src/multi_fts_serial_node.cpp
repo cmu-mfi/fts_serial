@@ -207,6 +207,8 @@ int main(int argc, char *argv[])
     enum Sensor device;
     float voltages[6];
     float FT[6];
+    geometry_msgs::WrenchStamped msg;
+    geometry_msgs::WrenchStamped msg_raw;
     FTSensor fts[4] = {FTSensor("yk_architect", nh), FTSensor("yk_builder", nh), FTSensor("yk_creator", nh), FTSensor("yk_destroyer", nh)};
 
     // read usb srt values
