@@ -156,8 +156,12 @@ public:
 
     FTSensor(char *name, ros::NodeHandle nh) : fti(selectCalFile(name))
     {
-        std::string pub_topic = std::format("{}/fts", name);
-        std::string pub_raw_topic = std::format("{}/fts_raw", name);
+        std::stringstream ss;
+        ss << name << "/fts";
+        std::string pub_topic = ss.str();
+        ss.str("");
+        ss << name << "/fts_raw";
+        std::string pub_raw_topic = ss.str();
         pub = nh.advertise<geometry_msgs::WrenchStamped>(pub_topic, 1000);
         pub_raw = nh.advertise<geometry_msgs::WrenchStamped>(pub_raw_topic, 1000);
     }
@@ -165,7 +169,7 @@ public:
 private:
     static char *selectCalFile(char *name)
     {
-        char *calfile;
+	std::string calfile;
         if (strcmp(name, "yk_architect") == 0)
             calfile = "FT45384_r1.cal";
         else if (strcmp(name, "yk_builder") == 0)
